@@ -5,8 +5,32 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ChatProgram"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="Chat | Bejelentkezés" 
+        Height="450" 
+        Width="800"
+        Background="Navy">
     <Grid>
+        <Label Content="Bejelentkezés"
+               FontSize="26"
+               Margin="10"
+               Foreground="GhostWhite"
+               HorizontalAlignment="Center" />
 
+        <StackPanel HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+            <TextBox x:Name="txtUsername"
+                     Width="200"
+                     Height="30"
+                     FontSize="20"
+                     HorizontalContentAlignment="Center"
+                     VerticalContentAlignment="Center"
+                     Margin="0 0 0 50"/>
+
+            <Button x:Name="btnLogin"
+                    Content="Bejelentkezés"
+                    Width="150"
+                    Height="25"
+                    Click="btnLogin_Click" />
+        </StackPanel>
     </Grid>
 </Window>

@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using ChatProgram.Models;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -19,6 +20,15 @@ namespace ChatProgram
         public MainWindow()
         {
             InitializeComponent();
+        }
+
+        private void btnLogin_Click(object sender, RoutedEventArgs e)
+        {
+            User user = new User(txtUsername.Text);
+
+            Chat chat = new Chat(user);
+            chat.Show();
+            this.Close();
         }
     }
 }

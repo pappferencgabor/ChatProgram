@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
 
 namespace ChatProgram
 {
@@ -40,7 +42,24 @@ namespace ChatProgram
                 // Üzenetek megjelenítése a ListBox-ban
                 Dispatcher.Invoke(() =>
                 {
-                    lbMessages.Items.Add(message);
+                    ListBoxItem item = new ListBoxItem();
+                    item.Content = message;
+
+                    string containedName = message.Trim().Split(':')[1].Split(']')[1].ToLower();
+                    string userName = usr.Name.ToLower().Trim();
+
+                    if (containedName == userName || containedName.Contains(userName))
+                    {
+                        item.Background = new SolidColorBrush(Colors.LightGreen);  // Saját üzenet kiemelése
+                        item.HorizontalContentAlignment = HorizontalAlignment.Right;  // Jobbra igazítás a saját üzenetekhez
+                    }
+                    else
+                    {
+                        item.Background = new SolidColorBrush(Colors.LightGray);  // Mások üzenetei
+                        item.HorizontalContentAlignment = HorizontalAlignment.Left;
+                    }
+
+                    lbMessages.Items.Add(item);
                 });
             }
         }

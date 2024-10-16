@@ -1,61 +1,62 @@
 ﻿using ChatProgram.Models;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
+using System.Net.WebSockets;
 using System.Text;
-using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace ChatProgram
 {
-    /// <summary>
-    /// Interaction logic for Chat.xaml
-    /// </summary>
     public partial class Chat : Window
     {
+        private ClientWebSocket _clientWebSocket;
+
         public User usr;
         public Chat(User user)
         {
             InitializeComponent();
             usr = user;
+            ConnectToWebSocket();
         }
 
-        private async void btnSendMessage_Click(object sender, RoutedEventArgs e)
+        private async Task ConnectToWebSocket()
         {
-            ApiRequestBody body = new ApiRequestBody();
-            body.Username = usr.Name;
-            body.Message = txtMessage.Text;
+            _clientWebSocket = new ClientWebSocket();
+            await _clientWebSocket.ConnectAsync(new Uri("ws://127.0.0.1:7777/chat"), CancellationToken.None);
 
-            string url = "http://127.0.0.1:7777/api/chat/v1/send";
+            // Kezdjük el az üzenetek fogadását
+            ReceiveMessages();
+        }
 
-            using (HttpClient client = new HttpClient())
+        private async void ReceiveMessages()
+        {
+            var buffer = new byte[1024 * 4];
+            while (_clientWebSocket.State == WebSocketState.Open)
             {
-                string json = JsonSerializer.Serialize(body);
-                StringContent content = new StringContent(json, Encoding.UTF8, "application/json");
+                var result = await _clientWebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                var message = Encoding.UTF8.GetString(buffer, 0, result.Count);
 
-                HttpResponseMessage response = await client.PostAsync(url, content);
-
-                if (response.IsSuccessStatusCode)
+                // Üzenetek megjelenítése a ListBox-ban
+                Dispatcher.Invoke(() =>
                 {
-                    string jsonResponse = await response.Content.ReadAsStringAsync();
-
-                    ApiResponse messageResponse = JsonSerializer.Deserialize<ApiResponse>(jsonResponse);
-                    lbMessages.Items.Add($"[{string.Format("{0:HH:mm}", DateTime.Now)}] {messageResponse.response.Username}: {messageResponse.response.Message}");
-                }
-                else
-                {
-                    MessageBox.Show($"Error: {response.StatusCode}");
-                }
+                    lbMessages.Items.Add(message);
+                });
             }
+        }
+
+        private async void SendMessage(string message)
+        {
+            var completeMessage = $"[{string.Format("{0:HH:mm}", DateTime.Now)}] {usr.Name}: {message}";
+            var bytes = Encoding.UTF8.GetBytes(completeMessage);
+            await _clientWebSocket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, CancellationToken.None);
+        }
+
+        private void btnSendMessage_Click(object sender, RoutedEventArgs e)
+        {
+            var message = txtMessage.Text;
+            SendMessage(message);
+            txtMessage.Clear();
         }
     }
 }

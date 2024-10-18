@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace ChatProgram.Models
 {
+    // Message Handler Response
     internal class ApiResponse
     {
         public int status { get; set; }
@@ -27,5 +28,13 @@ namespace ChatProgram.Models
             SentTo = sentTo;
             Date = date;
         }
+    }
+
+
+
+    // Users Handler
+    internal class ConnectedUsers
+    {
+        public List<string> users { get; set; }
     }
 }

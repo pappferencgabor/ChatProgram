@@ -10,5 +10,6 @@ namespace ChatProgram.Models
     {
         public string Username { get; set; }
         public string Message { get; set; }
+        public string SentTo { get; set; }
     }
 }

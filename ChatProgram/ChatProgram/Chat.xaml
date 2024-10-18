@@ -16,8 +16,9 @@
             <RowDefinition Height="0.15*" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="4*" />
-            <ColumnDefinition />
+            <ColumnDefinition Width="1.25*" />
+            <ColumnDefinition Width="3*"/>
+            <ColumnDefinition Width="0.75*"/>
         </Grid.ColumnDefinitions>
 
         <Label Content="Legmenőbb chat 2K24"
@@ -25,15 +26,22 @@
                Foreground="GhostWhite"
                VerticalAlignment="Center"
                HorizontalAlignment="Center"
-               Grid.ColumnSpan="2" />
+               Grid.ColumnSpan="3" />
 
         <ListBox x:Name="lbMessages"
                  Grid.Row="1"
                  Margin="5"
-                 Grid.ColumnSpan="2" />
+                 Grid.ColumnSpan="3" />
+        
+        <TextBox x:Name="txtSentTo"
+                 Grid.Row="2"
+                 Margin="5"
+                 FontSize="20"
+                 VerticalContentAlignment="Center" />
 
         <TextBox x:Name="txtMessage"
                  Grid.Row="2"
+                 Grid.Column="1"
                  Margin="5"
                  FontSize="20"
                  VerticalContentAlignment="Center"/>

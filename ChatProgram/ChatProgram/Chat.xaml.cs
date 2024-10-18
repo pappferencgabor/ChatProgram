@@ -2,11 +2,13 @@
 using System;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Navigation;
 
 namespace ChatProgram
 {
@@ -37,45 +39,74 @@ namespace ChatProgram
             while (_clientWebSocket.State == WebSocketState.Open)
             {
                 var result = await _clientWebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-                var message = Encoding.UTF8.GetString(buffer, 0, result.Count);
+                var messageJson = Encoding.UTF8.GetString(buffer, 0, result.Count);
+
+                var messageData = JsonSerializer.Deserialize<MessageData>(messageJson);
 
                 // Üzenetek megjelenítése a ListBox-ban
                 Dispatcher.Invoke(() =>
                 {
                     ListBoxItem item = new ListBoxItem();
-                    item.Content = message;
 
-                    string containedName = message.Trim().Split(':')[1].Split(']')[1].ToLower();
-                    string userName = usr.Name.ToLower().Trim();
-
-                    if (containedName == userName || containedName.Contains(userName))
+                    if (messageData.SentTo == usr.Name || messageData.SentTo == "Mindenki" || messageData.Username == usr.Name)
                     {
-                        item.Background = new SolidColorBrush(Colors.LightGreen);  // Saját üzenet kiemelése
-                        item.HorizontalContentAlignment = HorizontalAlignment.Right;  // Jobbra igazítás a saját üzenetekhez
-                    }
-                    else
-                    {
-                        item.Background = new SolidColorBrush(Colors.LightGray);  // Mások üzenetei
-                        item.HorizontalContentAlignment = HorizontalAlignment.Left;
-                    }
+                        //MessageBox.Show(messageData.Username);
+                        //MessageBox.Show(usr.Name);
+                        //MessageBox.Show((messageData.Username == usr.Name).ToString());
+                        item.Content = $"[{messageData.Date}] {messageData.Username} -> {messageData.SentTo}: {messageData.Message}";
 
-                    lbMessages.Items.Add(item);
+                        if (messageData.Username == usr.Name)
+                        {
+                            item.Background = new SolidColorBrush(Colors.LightGreen);
+                            item.HorizontalContentAlignment = HorizontalAlignment.Right;
+                        }
+                        else if (messageData.SentTo == usr.Name)
+                        {
+                            item.Background = new SolidColorBrush(Colors.LightSalmon);
+                            item.HorizontalContentAlignment = HorizontalAlignment.Left;
+                        }
+                        else if (messageData.SentTo == "Mindenki")
+                        {
+                            item.Background = new SolidColorBrush(Colors.LightGray);
+                            item.HorizontalContentAlignment = HorizontalAlignment.Left;
+                        }
+
+                        lbMessages.Items.Add(item);
+                    }
                 });
             }
         }
 
-        private async void SendMessage(string message)
+        private async void SendMessage(MessageData message)
         {
-            var completeMessage = $"[{string.Format("{0:HH:mm}", DateTime.Now)}] {usr.Name}: {message}";
-            var bytes = Encoding.UTF8.GetBytes(completeMessage);
+            var messageJson = JsonSerializer.Serialize(message);
+            var bytes = Encoding.UTF8.GetBytes(messageJson);
             await _clientWebSocket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, CancellationToken.None);
         }
 
         private void btnSendMessage_Click(object sender, RoutedEventArgs e)
         {
-            var message = txtMessage.Text;
-            SendMessage(message);
-            txtMessage.Clear();
+            var message = txtMessage.Text.Trim();
+            var sentTo = txtSentTo.Text.Trim() == "" ? "Mindenki" : txtSentTo.Text.Trim();
+
+            if (message == "")
+            {
+                return;
+            }
+            else
+            {
+                MessageData messageData = new MessageData(
+                    usr.Name,
+                    message,
+                    sentTo,
+                    string.Format("{0:HH:mm}", DateTime.Now)
+                );
+
+                SendMessage(messageData);
+
+                txtMessage.Clear();
+                txtSentTo.Clear();
+            }            
         }
     }
 }

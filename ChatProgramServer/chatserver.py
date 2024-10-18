@@ -1,7 +1,8 @@
+import json
 import uvicorn
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.middleware.cors import CORSMiddleware
 from typing import List
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 
 app = FastAPI()
 
@@ -30,12 +31,12 @@ class ConnectionManager:
     def disconnect(self, websocket: WebSocket):
         self.active_connections.remove(websocket)
 
-    async def send_message(self, message: str, websocket: WebSocket):
-        await websocket.send_text(message)
+    async def send_message(self, message: dict, websocket: WebSocket):
+        await websocket.send_json(message)
 
-    async def broadcast(self, message: str):
+    async def broadcast(self, message: dict):
         for connection in self.active_connections:
-            await connection.send_text(message)
+            await connection.send_json(message)
 
 manager = ConnectionManager()
 
@@ -44,7 +45,7 @@ async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
     try:
         while True:
-            data = await websocket.receive_text()
+            data = await websocket.receive_json()
             await manager.broadcast(data)
     except WebSocketDisconnect:
         manager.disconnect(websocket)
